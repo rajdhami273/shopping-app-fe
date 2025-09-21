@@ -15,6 +15,10 @@ import {
 
 // hooks
 import { useForm } from "@mantine/form";
+import { useDispatch, useSelector } from "react-redux";
+
+// actions
+import { verify } from "../../../state/actions/userActions";
 
 const verifySchema = z.object({
   otp: z
@@ -24,6 +28,9 @@ const verifySchema = z.object({
 });
 
 export default function Verify() {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.user);
+  console.log("User is: ", user);
   const form = useForm({
     initialValues: {
       otp: "",
@@ -32,13 +39,13 @@ export default function Verify() {
   });
 
   const handleSubmit = (values) => {
-    console.log("Verify OTP form values:", values);
-    // TODO: Implement OTP verification logic here
+    console.log("Verify OTP form values:", { values, email: user.email });
+    dispatch(verify({ ...values, email: user.email }));
   };
 
   const handleResendOTP = () => {
-    // TODO: Implement resend OTP logic
-    console.log("Resending OTP");
+    //   dispatch(resendOTP(form.values.email));
+    //   console.log("Resending OTP");
   };
 
   return (

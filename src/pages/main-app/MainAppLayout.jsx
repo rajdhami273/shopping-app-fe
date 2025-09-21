@@ -1,6 +1,6 @@
 // ts-strict
 
-import React from "react";
+import React, { useCallback, useEffect } from "react";
 import { Outlet } from "react-router";
 
 // components
@@ -22,6 +22,11 @@ import {
 
 // hooks
 import { useDisclosure } from "@mantine/hooks";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router";
+
+// actions
+import { logoutUser } from "../../state/actions/userActions";
 
 export default function MainAppLayout() {
   const [navbarOpened, { toggle: toggleNavbar, close: closeNavbar }] =
@@ -38,6 +43,33 @@ export default function MainAppLayout() {
     { label: "Analytics", href: "/analytics" },
     { label: "Settings", href: "/settings" },
   ];
+
+  const dispatch = useDispatch();
+
+  const logout = useCallback(() => {
+    dispatch(logoutUser());
+  }, [dispatch]);
+
+  const { user } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  useEffect(() => {
+    // if user is not logged in, redirect to login
+    if (!user) {
+      navigate("/auth/login");
+    }
+    // if user is not verified, redirect to verify
+    if (
+      user &&
+      !user.activeStatus?.isActive &&
+      user.activeStatus?.inactiveCode === "USER_NOT_VERIFIED"
+    ) {
+      navigate("/auth/verify");
+    }
+    // if user is not active, redirect to login
+    if (user && !user.activeStatus?.isActive) {
+      navigate("/auth/login");
+    }
+  }, [user, navigate]);
 
   return (
     <AppShell
@@ -61,7 +93,7 @@ export default function MainAppLayout() {
           <Group>
             <Burger opened={navbarOpened} onClick={toggleNavbar} size="sm" />
             <Text size="lg" fw={600}>
-              Shopping Admin
+              Shopping
             </Text>
           </Group>
 
@@ -78,9 +110,9 @@ export default function MainAppLayout() {
               <Menu.Target>
                 <UnstyledButton>
                   <Group gap="sm">
-                    <Avatar size="sm" radius="xl" />
+                    <Avatar size="sm" radius="xl" src={user?.image} />
                     <Text size="sm" fw={500}>
-                      John Doe
+                      {user?.name || user?.email}
                     </Text>
                   </Group>
                 </UnstyledButton>
@@ -96,7 +128,9 @@ export default function MainAppLayout() {
 
                 <Menu.Label>Actions</Menu.Label>
                 <Menu.Item>Switch Account</Menu.Item>
-                <Menu.Item color="red">Logout</Menu.Item>
+                <Menu.Item color="red" onClick={logout}>
+                  Logout
+                </Menu.Item>
               </Menu.Dropdown>
             </Menu>
           </Group>
@@ -153,9 +187,9 @@ export default function MainAppLayout() {
           <Stack gap="md">
             <Group justify="space-between" align="center">
               <Group gap="sm">
-                <Avatar size="sm" radius="xl" />
+                <Avatar size="sm" radius="xl" src={user?.image} />
                 <Text size="sm" fw={500}>
-                  John Doe
+                  {user?.name || user?.email}
                 </Text>
               </Group>
               <Badge variant="filled" size="xs">

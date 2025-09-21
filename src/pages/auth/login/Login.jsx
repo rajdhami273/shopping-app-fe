@@ -7,6 +7,10 @@ import { TextInput, PasswordInput, Button, Stack, Title } from "@mantine/core";
 
 // hooks
 import { useForm } from "@mantine/form";
+import { useDispatch } from "react-redux";
+
+// actions
+import { login } from "../../../state/actions/userActions";
 
 const loginSchema = z.object({
   email: z
@@ -19,16 +23,18 @@ const loginSchema = z.object({
 });
 
 export default function Login() {
+  const dispatch = useDispatch();
   const form = useForm({
     initialValues: {
-      email: "",
-      password: "",
+      email: "rajendra@mail.com",
+      password: "Rajendra@111",
     },
     validate: zod4Resolver(loginSchema),
   });
 
   const handleSubmit = (values) => {
     console.log("Login form values:", values);
+    dispatch(login(values));
   };
 
   return (

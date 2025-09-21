@@ -1,3 +1,5 @@
+// ts-strict
+
 import React from "react";
 import { z } from "zod";
 import { zod4Resolver } from "mantine-form-zod-resolver";
@@ -16,22 +18,26 @@ import { DatePickerInput } from "@mantine/dates";
 
 // hooks
 import { useForm } from "@mantine/form";
+import { useDispatch } from "react-redux";
+
+// actions
+import { register } from "../../../state/actions/userActions";
 
 const registerSchema = z
   .object({
-    fullName: z
+    name: z
       .string()
-      .min(2, { message: "Full name must be at least 2 characters" })
+      .min(2, { message: "Name must be at least 2 characters" })
       .regex(/^[a-zA-Z\s]+$/, {
-        message: "Full name should only contain letters and spaces",
+        message: "Name should only contain letters and spaces",
       }),
     email: z
       .string()
       .min(1, { message: "Email is required" })
       .email({ message: "Invalid email format" }),
-    phoneNumber: z
+    mobileNumber: z
       .string()
-      .min(10, { message: "Phone number must be at least 10 digits" })
+      .min(10, { message: "Mobile number must be at least 10 digits" })
       .regex(/^[+]?[\d\s()-]+$/, { message: "Invalid phone number format" }),
     password: z
       .string()
@@ -41,13 +47,29 @@ const registerSchema = z
           "Password must contain at least one uppercase letter, one lowercase letter, and one number",
       }),
     confirmPassword: z.string(),
-    dateOfBirth: z.date({ message: "Date of birth is required" }).refine(
-      (date) => {
-        const age = new Date().getFullYear() - date.getFullYear();
-        return age >= 13;
-      },
-      { message: "You must be at least 13 years old" }
-    ),
+    dob: z
+      .union([z.date(), z.string()])
+      .refine((val) => val !== null && val !== undefined && val !== "", {
+        message: "Date of birth is required",
+      })
+      .transform((val) => (typeof val === "string" ? new Date(val) : val))
+      .refine(
+        (date) => {
+          const today = new Date();
+          const birthDate = new Date(date);
+          const age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+
+          if (
+            monthDiff < 0 ||
+            (monthDiff === 0 && today.getDate() < birthDate.getDate())
+          ) {
+            return age - 1 >= 13;
+          }
+          return age >= 13;
+        },
+        { message: "You must be at least 13 years old" }
+      ),
     gender: z.string().min(1, { message: "Please select your gender" }),
     agreeToTOC: z.boolean().refine((val) => val === true, {
       message: "You must agree to the Terms and Conditions",
@@ -59,23 +81,24 @@ const registerSchema = z
   });
 
 export default function Register() {
+  const dispatch = useDispatch();
   const form = useForm({
     initialValues: {
-      fullName: "",
-      email: "",
-      phoneNumber: "",
-      password: "",
-      confirmPassword: "",
-      dateOfBirth: null,
-      gender: "",
-      agreeToTOC: false,
+      name: "Rajendra Dhami",
+      email: "rajendra@mail.com",
+      mobileNumber: "+9779800000000",
+      password: "Rajendra@111",
+      confirmPassword: "Rajendra@111",
+      dob: null,
+      gender: "male",
+      agreeToTOC: true,
     },
     validate: zod4Resolver(registerSchema),
   });
 
   const handleSubmit = (values) => {
     console.log("Register form values:", values);
-    // TODO: Implement registration logic here
+    dispatch(register(values));
   };
 
   return (
@@ -85,9 +108,9 @@ export default function Register() {
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack spacing="sm">
           <TextInput
-            label="Full Name"
-            placeholder="Enter your full name"
-            {...form.getInputProps("fullName")}
+            label="Name"
+            placeholder="Enter your name"
+            {...form.getInputProps("name")}
           />
 
           <TextInput
@@ -97,9 +120,9 @@ export default function Register() {
           />
 
           <TextInput
-            label="Phone Number"
-            placeholder="Enter your phone number"
-            {...form.getInputProps("phoneNumber")}
+            label="Mobile Number"
+            placeholder="Enter your mobile number"
+            {...form.getInputProps("mobileNumber")}
           />
 
           <PasswordInput
@@ -118,7 +141,7 @@ export default function Register() {
             label="Date of Birth"
             placeholder="Select your date of birth"
             maxDate={new Date()}
-            {...form.getInputProps("dateOfBirth")}
+            {...form.getInputProps("dob")}
           />
 
           <Select

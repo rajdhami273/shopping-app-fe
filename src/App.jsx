@@ -1,8 +1,10 @@
 // Import styles of packages that you've installed.
 // All packages except `@mantine/hooks` require styles imports
 import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
 
 import { MantineProvider, createTheme } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
 import { BrowserRouter } from "react-router";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
@@ -23,6 +25,7 @@ export default function App() {
     <MantineProvider theme={theme}>
       <Provider store={store}>
         <PersistGate loading={"Loading..."} persistor={persistor}>
+          <Notifications />
           <BrowserRouter>{routes}</BrowserRouter>
         </PersistGate>
       </Provider>

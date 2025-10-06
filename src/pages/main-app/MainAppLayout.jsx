@@ -1,7 +1,7 @@
 // ts-strict
 
 import React, { useCallback, useEffect } from "react";
-import { Outlet } from "react-router";
+import { Outlet, Link } from "react-router";
 
 // components
 import {
@@ -23,10 +23,14 @@ import {
 // hooks
 import { useDisclosure } from "@mantine/hooks";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 
 // actions
 import { logoutUser } from "../../state/actions/userActions";
+import { getCartItems } from "../../state/actions/cartActions";
+
+// components
+import CartIcon from "../../components/CartIcon";
 
 export default function MainAppLayout() {
   const [navbarOpened, { toggle: toggleNavbar, close: closeNavbar }] =
@@ -37,6 +41,7 @@ export default function MainAppLayout() {
   const sidebarLinks = [
     { label: "Dashboard", href: "/dashboard" },
     { label: "Products", href: "/products" },
+    { label: "Cart", href: "/cart" },
     { label: "Categories", href: "/categories" },
     { label: "Orders", href: "/orders" },
     { label: "Customers", href: "/customers" },
@@ -51,6 +56,7 @@ export default function MainAppLayout() {
   }, [dispatch]);
 
   const { user } = useSelector((state) => state.user);
+  const location = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
     // if user is not logged in, redirect to login
@@ -70,6 +76,9 @@ export default function MainAppLayout() {
       navigate("/auth/login");
     }
   }, [user, navigate]);
+  useEffect(() => {
+    dispatch(getCartItems());
+  }, [dispatch]);
 
   return (
     <AppShell
@@ -99,6 +108,7 @@ export default function MainAppLayout() {
 
           {/* Right side navigation links - Hidden on small screens */}
           <Group visibleFrom="sm">
+            <CartIcon />
             <Button variant="subtle" size="sm">
               Help
             </Button>
@@ -137,6 +147,7 @@ export default function MainAppLayout() {
 
           {/* Mobile-only burger for aside */}
           <Group hiddenFrom="sm">
+            <CartIcon />
             <Burger opened={asideOpened} onClick={toggleAside} size="sm" />
           </Group>
         </Group>
@@ -149,9 +160,11 @@ export default function MainAppLayout() {
             {sidebarLinks.map((link) => (
               <NavLink
                 key={link.label}
-                href={link.href}
+                component={Link}
+                to={link.href}
                 label={link.label}
                 onClick={() => closeNavbar()}
+                active={location.pathname === link.href}
               />
             ))}
           </Stack>
